@@ -16,6 +16,8 @@ class PlantsListPage extends StatefulWidget {
 }
 
 class _PlantsListPageState extends State<PlantsListPage> {
+  TextEditingController _searchController = TextEditingController();
+  List<PlantModel> _plants = [];
   @override
   void initState() {
     super.initState();
@@ -28,30 +30,59 @@ class _PlantsListPageState extends State<PlantsListPage> {
       appBar: AppBar(
         title: Text('Garden'),
       ),
-      body: ValueListenableBuilder<Box<PlantModel>>(
-        valueListenable: HiveDbHelper.getPlants()!.listenable(),
-        builder: (context, box, _) {
-          final plants = box.values.toList().cast<PlantModel>();
-          if (plants.length == 0) {
-            return Center(
-              child: Text('No plants'),
-            );
-          } else
-            return ListView.separated(
-              separatorBuilder: (context, index) {
-                return SizedBox(
-                  height: 2,
-                );
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: (value) => setState(() {
+                _plants = HiveDbHelper.getPlants()!.values.toList().cast<PlantModel>();
+                _plants =
+                    _plants.where((item) => item.plantName.toLowerCase().startsWith(value.toLowerCase())).toList();
+              }),
+              decoration: InputDecoration(
+                  labelText: "Search",
+                  hintText: "Search",
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(4.0)))),
+            ),
+          ),
+          Expanded(
+            child: ValueListenableBuilder<Box<PlantModel>>(
+              valueListenable: HiveDbHelper.getPlants()!.listenable(),
+              builder: (context, box, _) {
+                if (_searchController.text.isEmpty) _plants = box.values.toList().cast<PlantModel>();
+
+                if (_plants.length == 0) {
+                  return Center(
+                    child: Text('No plants'),
+                  );
+                } else
+                  return Column(
+                    children: [
+                      Expanded(
+                        child: ListView.separated(
+                          separatorBuilder: (context, index) {
+                            return SizedBox(
+                              height: 2,
+                            );
+                          },
+                          primary: true,
+                          scrollDirection: Axis.vertical,
+                          shrinkWrap: true,
+                          itemCount: _plants.length,
+                          itemBuilder: (context, index) {
+                            return _buildPlantTile(_plants[index], context);
+                          },
+                        ),
+                      ),
+                    ],
+                  );
               },
-              primary: true,
-              scrollDirection: Axis.vertical,
-              shrinkWrap: true,
-              itemCount: plants.length,
-              itemBuilder: (context, index) {
-                return _buildPlantTile(plants[index], context);
-              },
-            );
-        },
+            ),
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         heroTag: 'child',
@@ -59,7 +90,7 @@ class _PlantsListPageState extends State<PlantsListPage> {
         onPressed: () async {
           NavService.push(
               context,
-              AddPlantPage(
+              AddOrUpdatePlantPage(
                 editMode: false,
               ));
         },
@@ -87,7 +118,7 @@ Widget _buildPlantTile(PlantModel model, BuildContext context) {
         ),
         onTap: () => NavService.push(
             context,
-            AddPlantPage(
+            AddOrUpdatePlantPage(
               model: model,
               editMode: true,
             )),
