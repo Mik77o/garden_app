@@ -10,17 +10,17 @@ import 'package:garden_app/services/toast_service.dart';
 import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
 
-class AddPlantPage extends StatefulWidget {
-  AddPlantPage({Key? key, this.model, required this.editMode}) : super(key: key);
+class AddOrUpdatePlantPage extends StatefulWidget {
+  AddOrUpdatePlantPage({Key? key, this.model, required this.editMode}) : super(key: key);
 
   final PlantModel? model;
   final bool editMode;
 
   @override
-  _AddPlantPageState createState() => _AddPlantPageState();
+  _AddOrUpdatePlantPageState createState() => _AddOrUpdatePlantPageState();
 }
 
-class _AddPlantPageState extends State<AddPlantPage> {
+class _AddOrUpdatePlantPageState extends State<AddOrUpdatePlantPage> {
   TextEditingController _plantNameController = TextEditingController();
   TextEditingController _dateController = TextEditingController();
 
@@ -61,7 +61,7 @@ class _AddPlantPageState extends State<AddPlantPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
         automaticallyImplyLeading: false,
-        title: widget.editMode == true ? Text('Edit plant') : Text('Add plant'),
+        title: widget.editMode == true ? Text('Update plant') : Text('Add plant'),
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -100,9 +100,7 @@ class _AddPlantPageState extends State<AddPlantPage> {
                           width: double.infinity,
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(primary: Theme.of(context).buttonColor),
-                            child: widget.editMode == true
-                                ? Text('Edit plant'.toUpperCase())
-                                : Text('Add plant'.toUpperCase()),
+                            child: Text('Save'.toUpperCase()),
                             onPressed: () async {
                               if (_globalKey.currentState?.validate() == true) {
                                 if (widget.editMode == false)
