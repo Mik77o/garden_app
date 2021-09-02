@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
           debugShowCheckedModeBanner: false,
           title: 'Plants App',
           theme: ThemeData(
-            primarySwatch: MaterialColor(0xff455a64, primarySwatchColor),
+            primarySwatch: MaterialColor(0xff004d40, primarySwatchColor),
             textTheme: GoogleFonts.vollkornTextTheme(),
             brightness: Brightness.light,
             buttonColor: Color(0xff004d40),
@@ -44,10 +44,7 @@ class MyApp extends StatelessWidget {
             appBarTheme: AppBarTheme(
               brightness: Brightness.dark,
               textTheme: TextTheme(
-                headline6: GoogleFonts.vollkorn(
-                    color: Colors.white,
-                    fontSize: 20,
-                    fontWeight: FontWeight.w600),
+                headline6: GoogleFonts.vollkorn(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
               ),
             ),
             visualDensity: VisualDensity.adaptivePlatformDensity,

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:garden_app/enums/plant_type_enum.dart';
 import 'package:garden_app/helpers/hive_db_helper.dart';
 import 'package:garden_app/model/hive/plant_model.dart';
 import 'package:garden_app/pages/add_plant_page.dart';
 import 'package:garden_app/services/navigation_service.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:intl/intl.dart';
 
 class PlantsListPage extends StatefulWidget {
   PlantsListPage({Key? key}) : super(key: key);
@@ -17,7 +18,6 @@ class PlantsListPage extends StatefulWidget {
 class _PlantsListPageState extends State<PlantsListPage> {
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     Hive.box<PlantModel>('plants');
   }
@@ -34,7 +34,7 @@ class _PlantsListPageState extends State<PlantsListPage> {
           final plants = box.values.toList().cast<PlantModel>();
           if (plants.length == 0) {
             return Center(
-              child: Text('Brak roślin'),
+              child: Text('No plants'),
             );
           } else
             return ListView.separated(
@@ -57,10 +57,13 @@ class _PlantsListPageState extends State<PlantsListPage> {
         heroTag: 'child',
         elevation: 4.0,
         onPressed: () async {
-          NavService.push(context, AddPlantPage());
+          NavService.push(
+              context,
+              AddPlantPage(
+                editMode: false,
+              ));
         },
-        label: Text('Add plant',
-            style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
+        label: Text('Add plant', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
         icon: Icon(
           Icons.add,
           color: Colors.black,
@@ -72,30 +75,60 @@ class _PlantsListPageState extends State<PlantsListPage> {
 }
 
 Widget _buildPlantTile(PlantModel model, BuildContext context) {
+  var formattedDate = DateFormat('yyyy-MM-dd').format(model.plantingDate);
   return Padding(
     padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8, bottom: 4.0),
     child: Material(
-      color: Theme.of(context).accentColor,
       borderRadius: BorderRadius.circular(4),
-      elevation: 2.0,
+      elevation: 4.0,
       child: InkWell(
         customBorder: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        onTap: () => NavService.push(context, AddPlantPage()),
+        onTap: () => NavService.push(
+            context,
+            AddPlantPage(
+              model: model,
+              editMode: true,
+            )),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                model.plantName,
-                style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600),
+              Expanded(
+                flex: 3,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${model.plantName[0].toUpperCase()} ${model.plantName[model.plantName.length - 1]}',
+                      style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      model.plantName,
+                      style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      '${PlantTypeEnumToString[model.plantType]!.toUpperCase()}',
+                      style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      'Planting date: ' + formattedDate,
+                      style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
               ),
-              SizedBox(height: 8),
+              Expanded(
+                  child: Image.asset(
+                'assets/images/plant_icon.png',
+                fit: BoxFit.cover,
+                color: Theme.of(context).accentColor,
+              )),
             ],
           ),
         ),
