@@ -21,7 +21,6 @@ class _PlantsListPageState extends State<PlantsListPage> {
   @override
   void initState() {
     super.initState();
-    Hive.box<PlantModel>('plants');
   }
 
   @override
