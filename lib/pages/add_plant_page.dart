@@ -11,9 +11,8 @@ import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
 
 class AddOrUpdatePlantPage extends StatefulWidget {
-  AddOrUpdatePlantPage({Key? key, this.model, required this.editMode, this.onChanged}) : super(key: key);
+  AddOrUpdatePlantPage({Key? key, this.model, required this.editMode}) : super(key: key);
 
-  final Function()? onChanged;
   final PlantModel? model;
   final bool editMode;
 
@@ -33,6 +32,10 @@ class _AddOrUpdatePlantPageState extends State<AddOrUpdatePlantPage> {
   @override
   void initState() {
     super.initState();
+    initData();
+  }
+
+  void initData() {
     if (widget.editMode == true && widget.model != null) {
       _plantNameController.text = widget.model!.plantName;
       _dateController.text = DateFormat('yyyy-MM-dd').format(widget.model!.plantingDate);
@@ -67,81 +70,89 @@ class _AddOrUpdatePlantPageState extends State<AddOrUpdatePlantPage> {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset(
-                'assets/images/plant_icon.png',
-                height: 128,
-                color: Theme.of(context).accentColor,
-              ),
-            ),
-            Container(
-              margin: const EdgeInsets.all(16),
-              child: Form(
-                key: _globalKey,
-                child: Material(
-                  elevation: 4,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Column(
-                      children: [
-                        _buildPlantNameTextField(),
-                        SizedBox(
-                          height: 16,
-                        ),
-                        _buildPlantTypesDropDownButton(),
-                        SizedBox(
-                          height: 16,
-                        ),
-                        _buildDatetimePlantingTextField(),
-                        SizedBox(
-                          height: 16,
-                        ),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ElevatedButton.styleFrom(primary: Theme.of(context).buttonColor),
-                            child: Text('Save'.toUpperCase()),
-                            onPressed: () async {
-                              if (_globalKey.currentState?.validate() == true) {
-                                if (widget.editMode == false)
-                                  try {
-                                    HiveDbHelper.addPlant(_plantNameController.text, _currentPlantTypeValue,
-                                        DateTime.tryParse(_dateController.text) ?? DateTime.now());
-                                    ToastService.show(
-                                        context, "Plant ${_plantNameController.text} successfully added!");
-                                    NavService.pop(context);
-                                  } catch (e) {
-                                    ToastService.show(context, "Something went wrong...");
-                                  }
-                                else {
-                                  try {
-                                    if (widget.model != null) {
-                                      HiveDbHelper.editPlant(
-                                          widget.model!,
-                                          _plantNameController.text,
-                                          _currentPlantTypeValue,
-                                          DateTime.tryParse(_dateController.text) ?? DateTime.now());
-                                      ToastService.show(
-                                          context, "Plant ${widget.model!.plantName} successfully edited!");
-                                      NavService.pop(context);
-                                    }
-                                  } catch (e) {
-                                    ToastService.show(context, "Something went wrong...");
-                                  }
-                                }
-                              }
-                            },
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            _buildAppIconView(context),
+            _buildPlantForm(context),
           ],
         ),
+      ),
+    );
+  }
+
+  Padding _buildAppIconView(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Image.asset(
+        'assets/images/plant_icon.png',
+        height: 128,
+        color: Theme.of(context).accentColor,
+      ),
+    );
+  }
+
+  Container _buildPlantForm(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.all(16),
+      child: Form(
+        key: _globalKey,
+        child: Material(
+          borderRadius: BorderRadius.circular(4),
+          elevation: 4,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              children: [
+                _buildPlantNameTextField(),
+                SizedBox(
+                  height: 16,
+                ),
+                _buildPlantTypesDropDownButton(),
+                SizedBox(
+                  height: 16,
+                ),
+                _buildDatetimePlantingTextField(),
+                SizedBox(
+                  height: 16,
+                ),
+                _buildSavePlantButton(context)
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  SizedBox _buildSavePlantButton(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(primary: Theme.of(context).buttonColor),
+        child: Text('Save'.toUpperCase()),
+        onPressed: () async {
+          if (_globalKey.currentState?.validate() == true) {
+            if (widget.editMode == false)
+              try {
+                HiveDbHelper.addPlant(_plantNameController.text, _currentPlantTypeValue,
+                    DateTime.tryParse(_dateController.text) ?? DateTime.now());
+                ToastService.show(context, "Plant ${_plantNameController.text} successfully added!");
+                NavService.pop(context);
+              } catch (e) {
+                ToastService.show(context, "Something went wrong...");
+              }
+            else {
+              try {
+                if (widget.model != null) {
+                  HiveDbHelper.editPlant(widget.model!, _plantNameController.text, _currentPlantTypeValue,
+                      DateTime.tryParse(_dateController.text) ?? DateTime.now());
+                  ToastService.show(context, "Plant ${widget.model!.plantName} successfully edited!");
+                  NavService.pop(context);
+                }
+              } catch (e) {
+                ToastService.show(context, "Something went wrong...");
+              }
+            }
+          }
+        },
       ),
     );
   }

@@ -8,17 +8,9 @@ class HiveDbHelper {
     return Hive.box<PlantModel>('plants');
   }
 
-  static Box<PlantTypeModel>? getPlantTypes() {
-    return Hive.box<PlantTypeModel>('plantTypes');
-  }
-
   static Future<dynamic>? addPlant(String plantName, PlantTypeEnum plantType, DateTime plantingDate) {
     final box = getPlants();
     if (box != null) box.add(PlantModel(plantName: plantName, plantType: plantType, plantingDate: plantingDate));
-  }
-
-  static Future<dynamic>? addPlantTypes(Box<PlantTypeModel> box) {
-    box.add(PlantTypeModel(typesList: PlantTypeEnum.values));
   }
 
   static Future<dynamic>? editPlant(
@@ -33,5 +25,13 @@ class HiveDbHelper {
 
     final box = getPlants();
     if (box != null) box.put(plant.key, plant);
+  }
+
+  static Future<dynamic>? addPlantTypes(Box<PlantTypeModel> box) {
+    box.add(PlantTypeModel(typesList: PlantTypeEnum.values));
+  }
+
+  static Box<PlantTypeModel>? getPlantTypes() {
+    return Hive.box<PlantTypeModel>('plantTypes');
   }
 }

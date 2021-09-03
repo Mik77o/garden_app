@@ -16,6 +16,7 @@ class PlantsListPage extends StatefulWidget {
 
 class _PlantsListPageState extends State<PlantsListPage> {
   TextEditingController _searchController = TextEditingController();
+
   List<PlantModel> _plants = [];
   List<PlantModel> _paginatedList = [];
 
@@ -35,7 +36,73 @@ class _PlantsListPageState extends State<PlantsListPage> {
       ),
       body: Column(
         children: [
-          Padding(
+          _buildHeader(),
+          _buildListViewWithValueListenable(),
+        ],
+      ),
+    );
+  }
+
+  Expanded _buildListViewWithValueListenable() {
+    return Expanded(
+      child: ValueListenableBuilder<Box<PlantModel>>(
+        valueListenable: HiveDbHelper.getPlants()!.listenable(),
+        builder: (context, box, _) {
+          _plants = box.values.toList().cast<PlantModel>();
+          _plants.sort((a, b) => a.plantingDate.compareTo(b.plantingDate));
+          if (_present == 0) {
+            if (_plants.length <= 10) {
+              _paginatedList.addAll(_plants.getRange(_present, _plants.length));
+            } else
+              _paginatedList.addAll(_plants.getRange(_present, _present + _forOnePage));
+          }
+
+          _present = _present + _forOnePage;
+
+          if (_plants.length == 0) {
+            return Center(
+              child: Text('No plants', style: TextStyle(color: Colors.black54, fontSize: 16)),
+            );
+          } else
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: (_present <= _plants.length) ? _paginatedList.length + 1 : _paginatedList.length,
+                    itemBuilder: (context, index) {
+                      return index == _paginatedList.length
+                          ? Padding(
+                              padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                              child: ElevatedButton.icon(
+                                  onPressed: () => {
+                                        setState(() {
+                                          if ((_present + _forOnePage) > _plants.length) {
+                                            _paginatedList.addAll(_plants.getRange(_present, _plants.length));
+                                          } else {
+                                            _paginatedList.addAll(_plants.getRange(_present, _present + _forOnePage));
+                                          }
+                                          _present = _present + _forOnePage;
+                                        })
+                                      },
+                                  icon: Icon(Icons.arrow_downward_outlined),
+                                  label: Text('Load more'.toUpperCase())),
+                            )
+                          : _buildPlantTile(_paginatedList[index], context);
+                    },
+                  ),
+                ),
+              ],
+            );
+        },
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Row(
+      children: [
+        Expanded(
+          child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
               controller: _searchController,
@@ -55,81 +122,23 @@ class _PlantsListPageState extends State<PlantsListPage> {
                   border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(4.0)))),
             ),
           ),
-          Expanded(
-            child: ValueListenableBuilder<Box<PlantModel>>(
-              valueListenable: HiveDbHelper.getPlants()!.listenable(),
-              builder: (context, box, _) {
-                _plants = box.values.toList().cast<PlantModel>();
-                _plants.sort((a, b) => a.plantingDate.compareTo(b.plantingDate));
-                if (_present == 0) {
-                  if (_plants.length <= 10) {
-                    _paginatedList.addAll(_plants.getRange(_present, _plants.length));
-                  } else
-                    _paginatedList.addAll(_plants.getRange(_present, _present + _forOnePage));
-                }
-
-                _present = _present + _forOnePage;
-
-                if (_plants.length == 0) {
-                  return Center(
-                    child: Text('No plants'),
-                  );
-                } else
-                  return Column(
-                    children: [
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: (_present <= _plants.length) ? _paginatedList.length + 1 : _paginatedList.length,
-                          itemBuilder: (context, index) {
-                            return index == _paginatedList.length
-                                ? Padding(
-                                    padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
-                                    child: ElevatedButton.icon(
-                                        onPressed: () => {
-                                              setState(() {
-                                                if ((_present + _forOnePage) > _plants.length) {
-                                                  _paginatedList.addAll(_plants.getRange(_present, _plants.length));
-                                                } else {
-                                                  _paginatedList
-                                                      .addAll(_plants.getRange(_present, _present + _forOnePage));
-                                                }
-                                                _present = _present + _forOnePage;
-                                              })
-                                            },
-                                        icon: Icon(Icons.arrow_downward_outlined),
-                                        label: Text('Load more')),
-                                  )
-                                : _buildPlantTile(_paginatedList[index], context);
-                          },
-                        ),
-                      ),
-                    ],
-                  );
-              },
-            ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        heroTag: 'child',
-        elevation: 4.0,
-        onPressed: () async {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => AddOrUpdatePlantPage(editMode: false)))
-              .then((value) {
-            setState(() {
-              _paginatedList.clear();
-              _plants.clear();
-              _present = 0;
-            });
-          });
-        },
-        label: Text('Add plant', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
-        icon: Icon(
-          Icons.add,
-          color: Colors.black,
         ),
-        backgroundColor: Colors.white,
-      ),
+        Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: ElevatedButton(
+              onPressed: () async {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => AddOrUpdatePlantPage(editMode: false)))
+                    .then((value) {
+                  setState(() {
+                    _paginatedList.clear();
+                    _plants.clear();
+                    _present = 0;
+                  });
+                });
+              },
+              child: Text('Add plant'.toUpperCase())),
+        ),
+      ],
     );
   }
 
@@ -142,7 +151,7 @@ class _PlantsListPageState extends State<PlantsListPage> {
         elevation: 4.0,
         child: InkWell(
           customBorder: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(4),
           ),
           onTap: () => Navigator.push(
                   context, MaterialPageRoute(builder: (context) => AddOrUpdatePlantPage(model: model, editMode: true)))
