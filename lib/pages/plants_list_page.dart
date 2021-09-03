@@ -49,7 +49,7 @@ class _PlantsListPageState extends State<PlantsListPage> {
         valueListenable: HiveDbHelper.getPlants()!.listenable(),
         builder: (context, box, _) {
           _plants = box.values.toList().cast<PlantModel>();
-          _plants.sort((a, b) => a.plantingDate.compareTo(b.plantingDate));
+          _plants.sort((b, a) => a.plantingDate.compareTo(b.plantingDate));
           if (_present == 0) {
             if (_plants.length <= 10) {
               _paginatedList.addAll(_plants.getRange(_present, _plants.length));
@@ -173,23 +173,36 @@ class _PlantsListPageState extends State<PlantsListPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '${model.plantName[0].toUpperCase()} ${model.plantName[model.plantName.length - 1]}',
-                        style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w600),
+                        '${model.plantName[0].toUpperCase()} ${model.plantName[model.plantName.length - 1].toUpperCase()}',
+                        style: TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.w600),
                       ),
                       SizedBox(height: 8),
-                      Text(model.plantName,
-                          style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
+                      Text(model.plantName.toUpperCase(),
+                          style: TextStyle(
+                              color: Colors.black54,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontStyle: FontStyle.italic),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                       SizedBox(height: 8),
                       Text(
                         '${PlantTypeEnumToString[model.plantType]!.toUpperCase()}',
-                        style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
+                        style: TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.w600),
                       ),
                       SizedBox(height: 8),
-                      Text(
-                        'Planting date: ' + formattedDate,
-                        style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
+                      Row(
+                        children: [
+                          Text(
+                            'Planting date  '.toUpperCase(),
+                            style: TextStyle(color: Colors.black54, fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                          Text(
+                            formattedDate,
+                            style: TextStyle(
+                                color: Theme.of(context).buttonColor, fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -197,7 +210,7 @@ class _PlantsListPageState extends State<PlantsListPage> {
                 Expanded(
                   child: Image.asset(
                     'assets/images/plant_icon.png',
-                    fit: BoxFit.cover,
+                    height: 64,
                     color: Theme.of(context).accentColor,
                   ),
                 ),
