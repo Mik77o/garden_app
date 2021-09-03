@@ -15,7 +15,7 @@ class ToastService {
         child: Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            message.toUpperCase(),
+            message,
             style: TextStyle(color: Colors.white),
           ),
         ),

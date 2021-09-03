@@ -3,6 +3,7 @@ import 'package:garden_app/enums/plant_type_enum.dart';
 import 'package:garden_app/model/hive/plant_model.dart';
 import 'package:garden_app/model/hive/plant_types_model.dart';
 import 'package:garden_app/pages/plants_list_page.dart';
+import 'package:garden_app/themes/primary_swatch_color_settings.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -11,12 +12,16 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await Hive.initFlutter();
+
   Hive.registerAdapter(PlantTypeEnumAdapter());
   Hive.registerAdapter(PlantTypeModelAdapter());
   Hive.registerAdapter(PlantModelAdapter());
+
   await Hive.openBox<PlantModel>('plants');
   await Hive.openBox<PlantTypeModel>('plantTypes');
+
   runApp(MyApp());
 }
 
@@ -52,17 +57,4 @@ class MyApp extends StatelessWidget {
           home: PlantsListPage()),
     );
   }
-
-  final Map<int, Color> primarySwatchColor = {
-    50: Color.fromRGBO(0, 77, 64, .1),
-    100: Color.fromRGBO(0, 77, 64, .2),
-    200: Color.fromRGBO(0, 77, 64, .3),
-    300: Color.fromRGBO(0, 77, 64, .4),
-    400: Color.fromRGBO(0, 77, 64, .5),
-    500: Color.fromRGBO(0, 77, 64, .6),
-    600: Color.fromRGBO(0, 77, 64, .7),
-    700: Color.fromRGBO(0, 77, 64, .8),
-    800: Color.fromRGBO(0, 77, 64, .9),
-    900: Color.fromRGBO(0, 77, 64, 1),
-  };
 }

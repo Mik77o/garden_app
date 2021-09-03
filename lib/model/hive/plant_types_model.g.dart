@@ -35,7 +35,5 @@ class PlantTypeModelAdapter extends TypeAdapter<PlantTypeModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is PlantTypeModelAdapter &&
-          runtimeType == other.runtimeType &&
-          typeId == other.typeId;
+      other is PlantTypeModelAdapter && runtimeType == other.runtimeType && typeId == other.typeId;
 }

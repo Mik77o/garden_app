@@ -3,7 +3,6 @@ import 'package:garden_app/enums/plant_type_enum.dart';
 import 'package:garden_app/helpers/hive_db_helper.dart';
 import 'package:garden_app/model/hive/plant_model.dart';
 import 'package:garden_app/pages/add_plant_page.dart';
-import 'package:garden_app/services/navigation_service.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/intl.dart';
@@ -18,6 +17,11 @@ class PlantsListPage extends StatefulWidget {
 class _PlantsListPageState extends State<PlantsListPage> {
   TextEditingController _searchController = TextEditingController();
   List<PlantModel> _plants = [];
+  List<PlantModel> _paginatedList = [];
+
+  int _present = 0;
+  int _forOnePage = 10;
+
   @override
   void initState() {
     super.initState();
@@ -36,9 +40,13 @@ class _PlantsListPageState extends State<PlantsListPage> {
             child: TextField(
               controller: _searchController,
               onChanged: (value) => setState(() {
-                _plants = HiveDbHelper.getPlants()!.values.toList().cast<PlantModel>();
-                _plants =
+                _paginatedList =
                     _plants.where((item) => item.plantName.toLowerCase().startsWith(value.toLowerCase())).toList();
+                if (value.isEmpty) {
+                  _paginatedList.clear();
+                  _plants.clear();
+                  _present = 0;
+                }
               }),
               decoration: InputDecoration(
                   labelText: "Search",
@@ -51,7 +59,16 @@ class _PlantsListPageState extends State<PlantsListPage> {
             child: ValueListenableBuilder<Box<PlantModel>>(
               valueListenable: HiveDbHelper.getPlants()!.listenable(),
               builder: (context, box, _) {
-                if (_searchController.text.isEmpty) _plants = box.values.toList().cast<PlantModel>();
+                _plants = box.values.toList().cast<PlantModel>();
+                _plants.sort((a, b) => a.plantingDate.compareTo(b.plantingDate));
+                if (_present == 0) {
+                  if (_plants.length <= 10) {
+                    _paginatedList.addAll(_plants.getRange(_present, _plants.length));
+                  } else
+                    _paginatedList.addAll(_plants.getRange(_present, _present + _forOnePage));
+                }
+
+                _present = _present + _forOnePage;
 
                 if (_plants.length == 0) {
                   return Center(
@@ -61,18 +78,28 @@ class _PlantsListPageState extends State<PlantsListPage> {
                   return Column(
                     children: [
                       Expanded(
-                        child: ListView.separated(
-                          separatorBuilder: (context, index) {
-                            return SizedBox(
-                              height: 2,
-                            );
-                          },
-                          primary: true,
-                          scrollDirection: Axis.vertical,
-                          shrinkWrap: true,
-                          itemCount: _plants.length,
+                        child: ListView.builder(
+                          itemCount: (_present <= _plants.length) ? _paginatedList.length + 1 : _paginatedList.length,
                           itemBuilder: (context, index) {
-                            return _buildPlantTile(_plants[index], context);
+                            return index == _paginatedList.length
+                                ? Padding(
+                                    padding: const EdgeInsets.only(top: 8, left: 8, right: 8),
+                                    child: ElevatedButton.icon(
+                                        onPressed: () => {
+                                              setState(() {
+                                                if ((_present + _forOnePage) > _plants.length) {
+                                                  _paginatedList.addAll(_plants.getRange(_present, _plants.length));
+                                                } else {
+                                                  _paginatedList
+                                                      .addAll(_plants.getRange(_present, _present + _forOnePage));
+                                                }
+                                                _present = _present + _forOnePage;
+                                              })
+                                            },
+                                        icon: Icon(Icons.arrow_downward_outlined),
+                                        label: Text('Load more')),
+                                  )
+                                : _buildPlantTile(_paginatedList[index], context);
                           },
                         ),
                       ),
@@ -87,11 +114,14 @@ class _PlantsListPageState extends State<PlantsListPage> {
         heroTag: 'child',
         elevation: 4.0,
         onPressed: () async {
-          NavService.push(
-              context,
-              AddOrUpdatePlantPage(
-                editMode: false,
-              ));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => AddOrUpdatePlantPage(editMode: false)))
+              .then((value) {
+            setState(() {
+              _paginatedList.clear();
+              _plants.clear();
+              _present = 0;
+            });
+          });
         },
         label: Text('Add plant', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w600)),
         icon: Icon(
@@ -102,67 +132,71 @@ class _PlantsListPageState extends State<PlantsListPage> {
       ),
     );
   }
-}
 
-Widget _buildPlantTile(PlantModel model, BuildContext context) {
-  var formattedDate = DateFormat('yyyy-MM-dd').format(model.plantingDate);
-  return Padding(
-    padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8, bottom: 4.0),
-    child: Material(
-      borderRadius: BorderRadius.circular(4),
-      elevation: 4.0,
-      child: InkWell(
-        customBorder: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        onTap: () => NavService.push(
-            context,
-            AddOrUpdatePlantPage(
-              model: model,
-              editMode: true,
-            )),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                flex: 3,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${model.plantName[0].toUpperCase()} ${model.plantName[model.plantName.length - 1]}',
-                      style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      model.plantName,
-                      style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      '${PlantTypeEnumToString[model.plantType]!.toUpperCase()}',
-                      style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                    SizedBox(height: 8),
-                    Text(
-                      'Planting date: ' + formattedDate,
-                      style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
-                    ),
-                  ],
+  Widget _buildPlantTile(PlantModel model, BuildContext context) {
+    var formattedDate = DateFormat('yyyy-MM-dd').format(model.plantingDate);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8.0, left: 8.0, right: 8, bottom: 4.0),
+      child: Material(
+        borderRadius: BorderRadius.circular(4),
+        elevation: 4.0,
+        child: InkWell(
+          customBorder: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          onTap: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => AddOrUpdatePlantPage(model: model, editMode: true)))
+              .then((value) {
+            setState(() {
+              _paginatedList.clear();
+              _plants.clear();
+              _present = 0;
+            });
+          }),
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '${model.plantName[0].toUpperCase()} ${model.plantName[model.plantName.length - 1]}',
+                        style: TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(height: 8),
+                      Text(model.plantName,
+                          style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      SizedBox(height: 8),
+                      Text(
+                        '${PlantTypeEnumToString[model.plantType]!.toUpperCase()}',
+                        style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Planting date: ' + formattedDate,
+                        style: TextStyle(color: Colors.black54, fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              Expanded(
+                Expanded(
                   child: Image.asset(
-                'assets/images/plant_icon.png',
-                fit: BoxFit.cover,
-                color: Theme.of(context).accentColor,
-              )),
-            ],
+                    'assets/images/plant_icon.png',
+                    fit: BoxFit.cover,
+                    color: Theme.of(context).accentColor,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

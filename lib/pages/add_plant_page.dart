@@ -11,8 +11,9 @@ import 'package:intl/intl.dart';
 import 'package:hive/hive.dart';
 
 class AddOrUpdatePlantPage extends StatefulWidget {
-  AddOrUpdatePlantPage({Key? key, this.model, required this.editMode}) : super(key: key);
+  AddOrUpdatePlantPage({Key? key, this.model, required this.editMode, this.onChanged}) : super(key: key);
 
+  final Function()? onChanged;
   final PlantModel? model;
   final bool editMode;
 
@@ -84,7 +85,7 @@ class _AddOrUpdatePlantPageState extends State<AddOrUpdatePlantPage> {
                     padding: const EdgeInsets.all(8.0),
                     child: Column(
                       children: [
-                        _buildModelEntry(),
+                        _buildPlantNameTextField(),
                         SizedBox(
                           height: 16,
                         ),
@@ -107,7 +108,8 @@ class _AddOrUpdatePlantPageState extends State<AddOrUpdatePlantPage> {
                                   try {
                                     HiveDbHelper.addPlant(_plantNameController.text, _currentPlantTypeValue,
                                         DateTime.tryParse(_dateController.text) ?? DateTime.now());
-                                    ToastService.show(context, "Plant successfully added!");
+                                    ToastService.show(
+                                        context, "Plant ${_plantNameController.text} successfully added!");
                                     NavService.pop(context);
                                   } catch (e) {
                                     ToastService.show(context, "Something went wrong...");
@@ -163,8 +165,9 @@ class _AddOrUpdatePlantPageState extends State<AddOrUpdatePlantPage> {
     );
   }
 
-  Widget _buildModelEntry() {
+  Widget _buildPlantNameTextField() {
     return TextFormField(
+      maxLength: 60,
       controller: _plantNameController,
       style: TextStyle(color: Colors.black54, fontSize: 16),
       cursorColor: Theme.of(context).accentColor,

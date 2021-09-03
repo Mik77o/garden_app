@@ -1,7 +1,6 @@
 import 'package:garden_app/enums/plant_type_enum.dart';
 import 'package:garden_app/model/hive/plant_model.dart';
 import 'package:garden_app/model/hive/plant_types_model.dart';
-
 import 'package:hive/hive.dart';
 
 class HiveDbHelper {
